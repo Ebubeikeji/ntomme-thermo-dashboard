@@ -6,7 +6,7 @@ import matplotlib.dates as mdates
 import io
 
 # ==============================================================================
-# 0. PAGE CONFIGURATION & DUSTY ROSE / NAVY AESTHETICS
+# 0. PAGE CONFIGURATION & CUSTOM AESTHETICS
 # ==============================================================================
 st.set_page_config(
     page_title="Ntomme Virtual Sensor Controller",
@@ -15,37 +15,66 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for a soft pink + professional subsea navy palette
+# Custom CSS targeting Streamlit's stubborn default widgets
 st.markdown("""
     <style>
-    /* Force Main Canvas Background (Overrides Streamlit Dark Mode) */
-    [data-testid="stAppViewContainer"] { 
-        background-color: #F8ECEE !important; 
-    }
+    /* 1. Main Canvas & Sidebar Backgrounds */
+    [data-testid="stAppViewContainer"] { background-color: #F5F0ED !important; }
+    [data-testid="stSidebar"] { background-color: #F9D0D6 !important; }
     
-    /* Force Sidebar Background */
-    [data-testid="stSidebar"] {
-        background-color: #E2C2C9 !important;
-    }
-    
-    /* Typography & Headers - Force Navy Blue Everywhere */
+    /* 2. Global Typography - Forcing Subsea Navy */
     h1, h2, h3, h4, p, span, label, div { 
         color: #1A2E44 !important; 
         font-family: 'Helvetica Neue', sans-serif; 
     }
 
-    /* Metric Cards */
+    /* 3. Fix the Dark File Uploader */
+    [data-testid="stFileUploadDropzone"] {
+        background-color: #FFFFFF !important;
+        border: 2px dashed #DA9EA6 !important; /* Classic Valentine border */
+        border-radius: 8px !important;
+    }
+    [data-testid="stFileUploadDropzone"] button {
+        background-color: #C43670 !important; /* Raspberry Rose button */
+        color: white !important;
+    }
+
+    /* 4. Fix the Dark Multiselect Dropdowns */
+    .stMultiSelect div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        border: 1px solid #DA9EA6 !important;
+    }
+    /* Style the selected well tags (W3, W5, etc.) */
+    span[data-baseweb="tag"] {
+        background-color: #F9CBD6 !important; /* Rose Quartz */
+    }
+    span[data-baseweb="tag"] span {
+        color: #6A0B23 !important; /* Wine Passion text */
+        font-weight: bold !important;
+    }
+
+    /* 5. Fix the Blue Info Alert Box */
+    [data-testid="stAlert"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #DA9EA6 !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stAlert"] * {
+        color: #1A2E44 !important;
+    }
+
+    /* 6. Metric Cards */
     [data-testid="metric-container"] {
         background-color: #FFFFFF !important; 
         border-radius: 12px !important; 
         padding: 16px !important; 
-        border: 1px solid #DDAFC0 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        border: 1px solid #DA9EA6 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
     }
     
-    /* Buttons */
+    /* 7. Action Buttons (Download, etc.) */
     .stButton>button, .stDownloadButton>button {
-        background-color: #C87A8F !important;
+        background-color: #C43670 !important;
         color: white !important;
         border-radius: 8px !important;
         border: none !important;
@@ -53,28 +82,17 @@ st.markdown("""
         transition: all 0.2s ease-in-out;
     }
     .stButton>button:hover, .stDownloadButton>button:hover {
-        background-color: #B2657A !important;
+        background-color: #9E182B !important; /* Red Wine hover state */
         color: white !important;
     }
-    
-    /* Info Box (File upload warning) */
-    .stAlert {
-        background-color: #FFFFFF !important;
-        border: 1px solid #C87A8F !important;
-    }
 
-    /* Connect Box */
+    /* 8. Connect Card */
     .connect-card {
         background-color: #FFFFFF !important;
         border-radius: 10px !important;
         padding: 18px !important;
-        border: 1px solid #C87A8F !important;
+        border: 1px solid #C43670 !important;
         margin-top: 20px !important;
-    }
-    
-    /* Fix specific text overrides in the connect card */
-    .connect-card h4, .connect-card p {
-        color: #1A2E44 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -245,7 +263,7 @@ with st.sidebar:
                     ✉️ ebubeikeji7@gmail.com
                 </p>
             </a>
-            <a href="www.linkedin.com/in/ebube-ikeji" target="_blank" style="text-decoration:none;">
+            <a href="https://www.linkedin.com/in/ebube-ikeji/" target="_blank" style="text-decoration:none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: #1A2E44; margin:0;">
                     🔗 Connect on LinkedIn
                 </p>

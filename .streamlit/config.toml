@@ -1,0 +1,14 @@
+[theme]
+# The primary accent color for interactive elements (Raspberry Rose)
+primaryColor = "#C43670"
+
+# The main canvas background (Pearl Embrace)
+backgroundColor = "#F5F0ED"
+
+# The background for the sidebar AND all widgets like uploaders/dropdowns (Rose Mist)
+secondaryBackgroundColor = "#F9D0D6"
+
+# The global text color (Subsea Navy)
+textColor = "#1A2E44"
+
+font = "sans serif"

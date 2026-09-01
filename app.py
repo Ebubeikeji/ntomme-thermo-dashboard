@@ -230,13 +230,13 @@ with st.sidebar:
                     ✉️ ebubeikeji7@gmail.com
                 </p>
             </a>
-            <a href="https://www.linkedin.com/in/ebube-ikeji/" target="_blank" style="text-decoration:none;">
+            <a href="https://www.linkedin.com" target="_blank" style="text-decoration:none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: #1A2E44; margin:0;">
                     🔗 Connect on LinkedIn
                 </p>
             </a>
         </div>
-    """, unsafe_unsafe_html=True if 'unsafe_unsafe_html' in locals() else True, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 if uploaded_file is None:
     st.info("👈 Please upload a weekly PI Vision Excel file in the sidebar to run thermal predictions.")

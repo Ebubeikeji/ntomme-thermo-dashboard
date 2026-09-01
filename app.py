@@ -18,19 +18,29 @@ st.set_page_config(
 # Custom CSS for a soft pink + professional subsea navy palette
 st.markdown("""
     <style>
-    /* Main Canvas Background */
-    .main { background-color: #FAFAFA; }
+    /* Force Main Canvas Background (Overrides Streamlit Dark Mode) */
+    [data-testid="stAppViewContainer"] { 
+        background-color: #F8ECEE !important; 
+    }
     
-    /* Typography & Headers */
-    h1, h2, h3 { color: #1A2E44 !important; font-family: 'Helvetica Neue', sans-serif; }
-    p, span, label { color: #2D3748; }
+    /* Force Sidebar Background */
+    [data-testid="stSidebar"] {
+        background-color: #E2C2C9 !important;
+    }
+    
+    /* Typography & Headers - Force Navy Blue Everywhere */
+    h1, h2, h3, h4, p, span, label, div { 
+        color: #1A2E44 !important; 
+        font-family: 'Helvetica Neue', sans-serif; 
+    }
 
     /* Metric Cards */
-    .stMetric {
-        background-color: #FDF2F4; 
-        border-radius: 12px; 
-        padding: 16px; 
-        border: 1px solid #F3CFD6;
+    [data-testid="metric-container"] {
+        background-color: #FFFFFF !important; 
+        border-radius: 12px !important; 
+        padding: 16px !important; 
+        border: 1px solid #DDAFC0 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     }
     
     /* Buttons */
@@ -46,20 +56,25 @@ st.markdown("""
         background-color: #B2657A !important;
         color: white !important;
     }
-
-    /* Sidebar Styling */
-    [data-testid="stSidebar"] {
-        background-color: #F8ECEE;
-        border-right: 1px solid #E2D0D4;
-    }
     
+    /* Info Box (File upload warning) */
+    .stAlert {
+        background-color: #FFFFFF !important;
+        border: 1px solid #C87A8F !important;
+    }
+
     /* Connect Box */
     .connect-card {
-        background-color: #FFFFFF;
-        border-radius: 10px;
-        padding: 18px;
-        border: 1px solid #E2D0D4;
-        margin-top: 20px;
+        background-color: #FFFFFF !important;
+        border-radius: 10px !important;
+        padding: 18px !important;
+        border: 1px solid #C87A8F !important;
+        margin-top: 20px !important;
+    }
+    
+    /* Fix specific text overrides in the connect card */
+    .connect-card h4, .connect-card p {
+        color: #1A2E44 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -220,7 +235,7 @@ with st.sidebar:
         <div class="connect-card">
             <h4 style="margin-top:0; color:#1A2E44;">👋 Built by Ebube</h4>
             <p style="font-size: 0.88rem; line-height: 1.4; color: #4A5568;">
-                I built this controller to make your weekly thermal decay tracking clean, fast, and completely painless.
+                I built this controller to serve as another data set just like we have the APD readings, we can compare both to ensure we have accurate readings!
             </p>
             <p style="font-size: 0.88rem; font-weight: 500; color: #1A2E44; margin-bottom: 8px;">
                 Have any feedback or want to connect? Send me an email! I'd love to hear from you:
@@ -230,7 +245,7 @@ with st.sidebar:
                     ✉️ ebubeikeji7@gmail.com
                 </p>
             </a>
-            <a href="https://www.linkedin.com" target="_blank" style="text-decoration:none;">
+            <a href="www.linkedin.com/in/ebube-ikeji" target="_blank" style="text-decoration:none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: #1A2E44; margin:0;">
                     🔗 Connect on LinkedIn
                 </p>

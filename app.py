@@ -9,7 +9,7 @@ import io
 # 0. PAGE CONFIGURATION & CUSTOM AESTHETICS
 # ==============================================================================
 st.set_page_config(
-    page_title="Ntomme Virtual Sensor Controller",
+    page_title="Ntomme Subsea Calculator",
     page_icon="🌸",
     layout="wide",
     initial_sidebar_state="expanded"

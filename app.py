@@ -94,7 +94,7 @@ st.markdown("""
         border: 1px solid #C43670 !important;
         margin-top: 20px !important;
     }
-    
+
     /* Force Multiselect Tags to Light Pink */
     span[data-baseweb="tag"] {
         background-color: #FBD9E5 !important; 
@@ -122,17 +122,17 @@ NTOMME_FLOWPATHS = {'man_to_plet1': 152.108, 'plet1_to_plet2': 7217.0, 'plet2_to
 PLET_PENALTY_LENGTH = 75.0
 
 WELL_SPECS = {
-    'W1': {'name': 'W1', 'l_jumper': 21.034},
-    'W3': {'name': 'W3', 'l_jumper': 20.313},
-    'W5': {'name': 'W5', 'l_jumper': 21.034},
-    'W9': {'name': 'W9', 'l_jumper': 20.313},
+    'NT01': {'name': 'NT01', 'l_jumper': 21.034},
+    'NT03': {'name': 'NT03', 'l_jumper': 20.313},
+    'NT05': {'name': 'NT05', 'l_jumper': 21.034},
+    'NT09': {'name': 'NT09', 'l_jumper': 20.313},
 }
 
 PI_TAG_MAPPING = {
-    'TI-0521203A.PV': 'W1_Temp', 'FI-0521202.PV': 'W1_OilFlow_bopd', 'FI-0521206.PV': 'W1_WaterFlow_bwpd', 'FI-0521204.PV': 'W1_GasFlow_mmscfd',
-    'TI-0512101A.PV': 'W3_Temp', 'FI-0512102.PV': 'W3_OilFlow_bopd', 'FI-0512106.PV': 'W3_WaterFlow_bwpd', 'FI-0512104.PV': 'W3_GasFlow_mmscfd',
-    'TI-0513201B.PV': 'W5_Temp', 'FI-0513202.PV': 'W5_OilFlow_bopd', 'FI-0513206.PV': 'W5_WaterFlow_bwpd', 'FI-0513204.PV': 'W5_GasFlow_mmscfd',
-    'TI-0521403A.PV': 'W9_Temp', 'FI-0521402.PV': 'W9_OilFlow_bopd', 'FI-0521406.PV': 'W9_WaterFlow_bwpd', 'FI-0521404.PV': 'W9_GasFlow_mmscfd',
+    'TI-0521203A.PV': 'NT01_Temp', 'FI-0521202.PV': 'NT01_OilFlow_bopd', 'FI-0521206.PV': 'NT01_WaterFlow_bwpd', 'FI-0521204.PV': 'NT01_GasFlow_mmscfd',
+    'TI-0512101A.PV': 'NT03_Temp', 'FI-0512102.PV': 'NT03_OilFlow_bopd', 'FI-0512106.PV': 'NT03_WaterFlow_bwpd', 'FI-0512104.PV': 'NT03_GasFlow_mmscfd',
+    'TI-0513201B.PV': 'NT05_Temp', 'FI-0513202.PV': 'NT05_OilFlow_bopd', 'FI-0513206.PV': 'NT05_WaterFlow_bwpd', 'FI-0513204.PV': 'NT05_GasFlow_mmscfd',
+    'TI-0521403A.PV': 'NT09_Temp', 'FI-0521402.PV': 'NT09_OilFlow_bopd', 'FI-0521406.PV': 'NT09_WaterFlow_bwpd', 'FI-0521404.PV': 'NT09_GasFlow_mmscfd',
 }
 
 # ==============================================================================
@@ -253,9 +253,9 @@ with st.sidebar:
     st.header("Manifold Routing")
     st.caption("Reconfigure active wells per header whenever subsea alignments change.")
     
-    h1_selected = st.multiselect("Header 1 Active Wells", options=list(WELL_SPECS.keys()), default=['W3', 'W5'])
-    h2_selected = st.multiselect("Header 2 Active Wells", options=list(WELL_SPECS.keys()), default=['W1', 'W9'])
-
+    h1_selected = st.multiselect("Header 1 Active Wells", options=list(WELL_SPECS.keys()), default=['NT03', 'NT05'])
+    h2_selected = st.multiselect("Header 2 Active Wells", options=list(WELL_SPECS.keys()), default=['NT01', 'NT09'])
+    
     # -- CREATOR & CONTACT CARD --
     st.markdown("""
         <div class="connect-card">

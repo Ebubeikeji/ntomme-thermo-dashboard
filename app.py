@@ -94,6 +94,14 @@ st.markdown("""
         border: 1px solid #C43670 !important;
         margin-top: 20px !important;
     }
+    
+    /* Force Multiselect Tags to Light Pink */
+    span[data-baseweb="tag"] {
+        background-color: #FBD9E5 !important; 
+    }
+    span[data-baseweb="tag"] span {
+        color: #1A2E44 !important; 
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -272,7 +280,11 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 if uploaded_file is None:
-    st.info("👈 Please upload a weekly PI Vision Excel file in the sidebar to run thermal predictions.")
+    st.markdown("""
+        <div style="background-color: #FFFFFF; border: 1px solid #C43670; padding: 16px; border-radius: 8px; color: #1A2E44; font-weight: 500;">
+            👈 Please upload a weekly PI Vision Excel file in the sidebar to run thermal predictions.
+        </div>
+    """, unsafe_allow_html=True)
 else:
     with st.spinner('Calculating thermodynamic decay arrays...'):
         try:

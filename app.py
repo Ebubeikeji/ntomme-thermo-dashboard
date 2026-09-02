@@ -94,7 +94,7 @@ st.markdown("""
         border: 1px solid #C43670 !important;
         margin-top: 20px !important;
     }
-
+    
     /* Force Multiselect Tags to Light Pink */
     span[data-baseweb="tag"] {
         background-color: #FBD9E5 !important; 
@@ -122,17 +122,17 @@ NTOMME_FLOWPATHS = {'man_to_plet1': 152.108, 'plet1_to_plet2': 7217.0, 'plet2_to
 PLET_PENALTY_LENGTH = 75.0
 
 WELL_SPECS = {
-    'NT01': {'name': 'NT01', 'l_jumper': 21.034},
-    'NT03': {'name': 'NT03', 'l_jumper': 20.313},
-    'NT05': {'name': 'NT05', 'l_jumper': 21.034},
-    'NT09': {'name': 'NT09', 'l_jumper': 20.313},
+    'W1': {'name': 'W1', 'l_jumper': 21.034},
+    'W3': {'name': 'W3', 'l_jumper': 20.313},
+    'W5': {'name': 'W5', 'l_jumper': 21.034},
+    'W9': {'name': 'W9', 'l_jumper': 20.313},
 }
 
 PI_TAG_MAPPING = {
-    'TI-0521203A.PV': 'NT01_Temp', 'FI-0521202.PV': 'NT01_OilFlow_bopd', 'FI-0521206.PV': 'NT01_WaterFlow_bwpd', 'FI-0521204.PV': 'NT01_GasFlow_mmscfd',
-    'TI-0512101A.PV': 'NT03_Temp', 'FI-0512102.PV': 'NT03_OilFlow_bopd', 'FI-0512106.PV': 'NT03_WaterFlow_bwpd', 'FI-0512104.PV': 'NT03_GasFlow_mmscfd',
-    'TI-0513201B.PV': 'NT05_Temp', 'FI-0513202.PV': 'NT05_OilFlow_bopd', 'FI-0513206.PV': 'NT05_WaterFlow_bwpd', 'FI-0513204.PV': 'NT05_GasFlow_mmscfd',
-    'TI-0521403A.PV': 'NT09_Temp', 'FI-0521402.PV': 'NT09_OilFlow_bopd', 'FI-0521406.PV': 'NT09_WaterFlow_bwpd', 'FI-0521404.PV': 'NT09_GasFlow_mmscfd',
+    'TI-0521203A.PV': 'W1_Temp', 'FI-0521202.PV': 'W1_OilFlow_bopd', 'FI-0521206.PV': 'W1_WaterFlow_bwpd', 'FI-0521204.PV': 'W1_GasFlow_mmscfd',
+    'TI-0512101A.PV': 'W3_Temp', 'FI-0512102.PV': 'W3_OilFlow_bopd', 'FI-0512106.PV': 'W3_WaterFlow_bwpd', 'FI-0512104.PV': 'W3_GasFlow_mmscfd',
+    'TI-0513201B.PV': 'W5_Temp', 'FI-0513202.PV': 'W5_OilFlow_bopd', 'FI-0513206.PV': 'W5_WaterFlow_bwpd', 'FI-0513204.PV': 'W5_GasFlow_mmscfd',
+    'TI-0521403A.PV': 'W9_Temp', 'FI-0521402.PV': 'W9_OilFlow_bopd', 'FI-0521406.PV': 'W9_WaterFlow_bwpd', 'FI-0521404.PV': 'W9_GasFlow_mmscfd',
 }
 
 # ==============================================================================
@@ -161,42 +161,59 @@ def calculate_thermal_decay(t_in, mass_flow, cp_mix, length, k_constant):
 def process_pi_data(uploaded_file):
     raw_df = pd.read_excel(uploaded_file, header=None)
     header_idx = 0
-    
-    # 1. Smart Header Detection: Check for base tags instead of relying on exact '.PV' matches
-    base_tags = [tag.replace('.PV', '') for tag in PI_TAG_MAPPING.keys()]
     for idx, row in raw_df.head(20).iterrows():
-        row_str = " ".join([str(val) for val in row.values])
-        if any(base_tag in row_str for base_tag in base_tags):
+        if any(isinstance(val, str) and '.PV' in val for val in row.values):
             header_idx = idx
             break
             
     df = pd.read_excel(uploaded_file, skiprows=header_idx)
-    
-    # 2. Time Column Formatting & Metadata Cleanup
     time_col = [col for col in df.columns if 'unnamed' in str(col).lower() or 'time' in str(col).lower()][0]
     df.rename(columns={time_col: 'Timestamp'}, inplace=True)
-    df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
-    df.dropna(subset=['Timestamp'], inplace=True) # Destroys any lingering PI Vision text rows
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
     df.set_index('Timestamp', inplace=True)
     
-    # 3. Fuzzy Column Renaming (Catches 'TI-0521203A', 'TI-0521203A.PV', or 'TI-0521203A (degC)')
-    new_col_names = {}
-    for col in df.columns:
-        for pi_tag, new_name in PI_TAG_MAPPING.items():
-            if pi_tag.replace('.PV', '') in str(col):
-                new_col_names[col] = new_name
-                
-    df.rename(columns=new_col_names, inplace=True)
+    df.rename(columns=PI_TAG_MAPPING, inplace=True)
     
-    # 4. Data Type Conversion & Unit Scaling
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
         if 'GasFlow' in col:
             df[col] = df[col] * 0.000848  
         elif 'OilFlow' in col or 'WaterFlow' in col:
             df[col] = df[col] * 150.96    
-            
     return df.ffill().fillna(0.0)
+
+def run_predictions(df, header_name, wells_config):
+    results_df = pd.DataFrame(index=df.index)
+    total_header_flow, manifold_numerator, manifold_denominator = np.zeros(len(df)), np.zeros(len(df)), np.zeros(len(df))
+
+    for well in wells_config:
+        name = well['name']
+        t_xt = df.get(f'{name}_Temp', np.zeros(len(df)))
+        bwpd = df.get(f'{name}_WaterFlow_bwpd', np.zeros(len(df)))
+        bopd = df.get(f'{name}_OilFlow_bopd', np.zeros(len(df)))
+        mmscfd = df.get(f'{name}_GasFlow_mmscfd', np.zeros(len(df)))
+
+        m_water, m_oil, m_gas = convert_to_mass_flow(bopd, bwpd, mmscfd)
+        m_total = m_water + m_oil + m_gas
+        cp = calculate_mixture_cp(m_water, m_oil, m_gas)
+
+        t_arrival = calculate_thermal_decay(t_xt, m_total, cp, well['l_jumper'], K_JUMPER)
+        
+        manifold_numerator += (m_total * cp) * t_arrival
+        manifold_denominator += (m_total * cp)
+        total_header_flow += m_total
+
+    safe_denom = np.where(manifold_denominator <= 0.01, 1.0, manifold_denominator)
+    t_header_mixed = np.where(manifold_denominator > 0.01, manifold_numerator / safe_denom, T_AMBIENT)
+    mixed_cp = np.where(total_header_flow > 0.01, manifold_denominator / np.where(total_header_flow <= 0.01, 1.0, total_header_flow), (C_WATER + C_OIL + C_GAS)/3.0)
+
+    results_df[f'{header_name}_Temp'] = t_header_mixed
+    t_plet1 = calculate_thermal_decay(t_header_mixed, total_header_flow, mixed_cp, NTOMME_FLOWPATHS['man_to_plet1'] + PLET_PENALTY_LENGTH, K_FLOWLINE)
+    t_plet2 = calculate_thermal_decay(t_plet1, total_header_flow, mixed_cp, NTOMME_FLOWPATHS['plet1_to_plet2'] + PLET_PENALTY_LENGTH, K_FLOWLINE)
+    results_df[f'{header_name}_Riser_Base_Temp'] = calculate_thermal_decay(t_plet2, total_header_flow, mixed_cp, NTOMME_FLOWPATHS['plet2_to_rb'], K_FLOWLINE)
+
+    results_df.loc[total_header_flow < 0.1, [f'{header_name}_Temp', f'{header_name}_Riser_Base_Temp']] = np.nan
+    return results_df
 
 # ==============================================================================
 # 4. PLOTTING FUNCTION
@@ -236,9 +253,9 @@ with st.sidebar:
     st.header("Manifold Routing")
     st.caption("Reconfigure active wells per header whenever subsea alignments change.")
     
-    h1_selected = st.multiselect("Header 1 Active Wells", options=list(WELL_SPECS.keys()), default=['NT03', 'NT05'])
-    h2_selected = st.multiselect("Header 2 Active Wells", options=list(WELL_SPECS.keys()), default=['NT01', 'NT09'])
-    
+    h1_selected = st.multiselect("Header 1 Active Wells", options=list(WELL_SPECS.keys()), default=['W3', 'W5'])
+    h2_selected = st.multiselect("Header 2 Active Wells", options=list(WELL_SPECS.keys()), default=['W1', 'W9'])
+
     # -- CREATOR & CONTACT CARD --
     st.markdown("""
         <div class="connect-card">

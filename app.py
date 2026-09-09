@@ -260,7 +260,7 @@ def render_flow_diagram(h1_wells, h2_wells):
     # 4+ space indented lines as a code block, which was printing this as
     # literal text instead of parsing it as HTML/SVG.
     svg = f"""
-<div style="background-color:#FFFFFF; border:1px solid #EBD8DC; border-radius:12px; padding:22px 28px 18px; font-family: 'Helvetica Neue', sans-serif;">
+<div style="background-color:#FFFFFF; border:1px solid #EBD8DC; border-radius:12px; padding:22px 28px 18px; font-family: 'Helvetica Neue', sans-serif; max-width:720px; margin:0 auto;">
 <svg width="100%" viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -344,6 +344,9 @@ else:
 
             h1_preds = run_predictions(df, "Header1", h1_config)
             h2_preds = run_predictions(df, "Header2", h2_config)
+
+            # -- FLOW DIAGRAM (kept visible after upload too, as context) --
+            components.html(render_flow_diagram(h1_selected, h2_selected), height=300)
 
             # -- DISPLAY METRIC CARDS --
             st.subheader("Latest System Status")

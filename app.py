@@ -18,61 +18,69 @@ st.set_page_config(
 # Custom CSS targeting Streamlit's stubborn default widgets
 st.markdown("""
     <style>
-    /* 1. Main Canvas & Sidebar Backgrounds */
+    /* 1. Main Canvas */
     [data-testid="stAppViewContainer"] { background-color: #F5F0ED !important; }
-    [data-testid="stSidebar"] { background-color: #F9D0D6 !important; }
-    
-    /* 2. Global Typography - Forcing Subsea Navy */
-    h1, h2, h3, h4, p, span, label, div { 
-        color: #1A2E44 !important; 
-        font-family: 'Helvetica Neue', sans-serif; 
+
+    /* 2. Sidebar — navy instead of flat pink, so the rose accent has contrast to pop against */
+    [data-testid="stSidebar"] { background-color: #16273B !important; }
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4,
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] label { color: #EDEFF2 !important; }
+    [data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] small {
+        color: #8FA3B8 !important;
     }
 
-    /* 3. Fix the Dark File Uploader */
+    /* 3. Main canvas typography stays navy-on-cream */
+    [data-testid="stAppViewContainer"] h1, [data-testid="stAppViewContainer"] h2,
+    [data-testid="stAppViewContainer"] h3, [data-testid="stAppViewContainer"] p,
+    [data-testid="stAppViewContainer"] span, [data-testid="stAppViewContainer"] label {
+        color: #1A2E44 !important;
+        font-family: 'Helvetica Neue', sans-serif;
+    }
+
+    /* 4. File uploader — dark card matching the new sidebar, rose action button */
     [data-testid="stFileUploadDropzone"] {
-        background-color: #FFFFFF !important;
-        border: 2px dashed #DA9EA6 !important; /* Classic Valentine border */
+        background-color: #1E3349 !important;
+        border: 1.5px dashed #3A5068 !important;
         border-radius: 8px !important;
     }
     [data-testid="stFileUploadDropzone"] button {
-        background-color: #C43670 !important; /* Raspberry Rose button */
+        background-color: #C43670 !important;
         color: white !important;
     }
 
-    /* 4. Fix the Dark Multiselect Dropdowns */
+    /* 5. Multiselect dropdowns */
     .stMultiSelect div[data-baseweb="select"] > div {
-        background-color: #FFFFFF !important;
-        border: 1px solid #DA9EA6 !important;
+        background-color: #1E3349 !important;
+        border: 1px solid #3A5068 !important;
     }
-    /* Style the selected well tags (W3, W5, etc.) */
     span[data-baseweb="tag"] {
-        background-color: #F9CBD6 !important; /* Rose Quartz */
+        background-color: #C43670 !important;
     }
     span[data-baseweb="tag"] span {
-        color: #6A0B23 !important; /* Wine Passion text */
+        color: #FBD9E5 !important;
         font-weight: bold !important;
     }
 
-    /* 5. Fix the Blue Info Alert Box */
+    /* 6. Info alert box (main canvas) */
     [data-testid="stAlert"] {
         background-color: #FFFFFF !important;
         border: 1px solid #DA9EA6 !important;
         border-radius: 8px !important;
     }
-    [data-testid="stAlert"] * {
-        color: #1A2E44 !important;
-    }
+    [data-testid="stAlert"] * { color: #1A2E44 !important; }
 
-    /* 6. Metric Cards */
+    /* 7. Metric cards */
     [data-testid="metric-container"] {
-        background-color: #FFFFFF !important; 
-        border-radius: 12px !important; 
-        padding: 16px !important; 
-        border: 1px solid #DA9EA6 !important;
+        background-color: #FFFFFF !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        border: 1px solid #EBD8DC !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
     }
-    
-    /* 7. Action Buttons (Download, etc.) */
+
+    /* 8. Buttons (main canvas) */
     .stButton>button, .stDownloadButton>button {
         background-color: #C43670 !important;
         color: white !important;
@@ -82,28 +90,22 @@ st.markdown("""
         transition: all 0.2s ease-in-out;
     }
     .stButton>button:hover, .stDownloadButton>button:hover {
-        background-color: #9E182B !important; /* Red Wine hover state */
+        background-color: #9E182B !important;
         color: white !important;
     }
 
-    /* 8. Connect Card */
+    /* 9. About/contact card — sits inside the sidebar now, styled to match it */
     .connect-card {
-        background-color: #FFFFFF !important;
+        background-color: #1E3349 !important;
         border-radius: 10px !important;
-        padding: 18px !important;
-        border: 1px solid #C43670 !important;
-        margin-top: 20px !important;
+        padding: 16px !important;
+        border: 1px solid #3A5068 !important;
     }
-    
-    /* Force Multiselect Tags to Light Pink */
-    span[data-baseweb="tag"] {
-        background-color: #FBD9E5 !important; 
-    }
-    span[data-baseweb="tag"] span {
-        color: #1A2E44 !important; 
-    }
+    .connect-card h4, .connect-card p { color: #EDEFF2 !important; }
+    .connect-card a p { color: #F09CB4 !important; }
     </style>
 """, unsafe_allow_html=True)
+
 
 # ==============================================================================
 # 1. CONSTANTS, WELL METADATA & PI TAG MAPPING
@@ -238,6 +240,55 @@ def create_styled_plot(df, temp_col, riser_col, title, line1_color, line2_color,
     fig.subplots_adjust(bottom=0.2)
     return fig
 
+#=======================
+# Flow path diagram
+#========================
+def render_flow_diagram(h1_wells, h2_wells):
+    h1_label = ", ".join(h1_wells) if h1_wells else "—"
+    h2_label = ", ".join(h2_wells) if h2_wells else "—"
+    svg = f"""
+    <div style="background-color:#FFFFFF; border:1px solid #EBD8DC; border-radius:10px; padding:16px 20px;">
+      <svg width="100%" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#8A97A6" stroke-width="1.5"/>
+          </marker>
+        </defs>
+        <rect x="30" y="20" width="120" height="44" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
+        <text x="90" y="42" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 1</text>
+        <text x="90" y="58" text-anchor="middle" font-size="11" fill="#0F5A4A">{h1_label}</text>
+
+        <rect x="30" y="140" width="120" height="44" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
+        <text x="90" y="162" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 2</text>
+        <text x="90" y="178" text-anchor="middle" font-size="11" fill="#0F5A4A">{h2_label}</text>
+
+        <line x1="150" y1="42" x2="200" y2="90" stroke="#8A97A6" marker-end="url(#arr)"/>
+        <line x1="150" y1="162" x2="200" y2="112" stroke="#8A97A6" marker-end="url(#arr)"/>
+
+        <rect x="202" y="80" width="120" height="44" rx="8" fill="#1A2E44"/>
+        <text x="262" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Manifold</text>
+        <text x="262" y="118" text-anchor="middle" font-size="11" fill="#C7D1DC">mixed temp</text>
+
+        <line x1="322" y1="102" x2="362" y2="102" stroke="#8A97A6" marker-end="url(#arr)"/>
+        <rect x="364" y="80" width="90" height="44" rx="8" fill="#1A2E44"/>
+        <text x="409" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 1</text>
+
+        <line x1="454" y1="102" x2="494" y2="102" stroke="#8A97A6" marker-end="url(#arr)"/>
+        <rect x="496" y="80" width="90" height="44" rx="8" fill="#1A2E44"/>
+        <text x="541" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 2</text>
+
+        <line x1="541" y1="124" x2="541" y2="154" stroke="#8A97A6" marker-end="url(#arr)"/>
+        <rect x="481" y="156" width="120" height="44" rx="8" fill="#C43670"/>
+        <text x="541" y="178" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Riser base</text>
+
+        <text x="340" y="212" text-anchor="middle" font-size="11" fill="#7A8794">
+          Temperatures populate at each stage once a PI export is uploaded
+        </text>
+      </svg>
+    </div>
+    """
+    return svg
+
 # ==============================================================================
 # 5. FRONTEND UI LAYOUT
 # ==============================================================================
@@ -279,12 +330,8 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
-if uploaded_file is None:
-    st.markdown("""
-        <div style="background-color: #FFFFFF; border: 1px solid #C43670; padding: 16px; border-radius: 8px; color: #1A2E44; font-weight: 500;">
-            👈 Please upload a weekly PI Vision Excel file in the sidebar to run thermal predictions.
-        </div>
-    """, unsafe_allow_html=True)
+iif uploaded_file is None:
+    st.markdown(render_flow_diagram(h1_selected, h2_selected), unsafe_allow_html=True)
 else:
     with st.spinner('Calculating thermodynamic decay arrays...'):
         try:

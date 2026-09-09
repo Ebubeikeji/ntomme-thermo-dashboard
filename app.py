@@ -22,14 +22,16 @@ st.markdown("""
     /* 1. Main Canvas */
     [data-testid="stAppViewContainer"] { background-color: #F5F0ED !important; }
 
-    /* 2. Sidebar — navy instead of flat pink, so the rose accent has contrast to pop against */
-    [data-testid="stSidebar"] { background-color: #16273B !important; }
+    /* 2. Sidebar — pink, as requested. Darkened slightly from the original
+       flat #F9D0D6 to #F7C2CE so navy text and the rose accent both read
+       cleanly against it (the original was a touch too light for contrast). */
+    [data-testid="stSidebar"] { background-color: #F7C2CE !important; }
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4,
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] label { color: #EDEFF2 !important; }
+    [data-testid="stSidebar"] label { color: #1A2E44 !important; }
     [data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] small {
-        color: #8FA3B8 !important;
+        color: #6A4A54 !important;
     }
 
     /* 3. Main canvas typography stays navy-on-cream */
@@ -40,10 +42,10 @@ st.markdown("""
         font-family: 'Helvetica Neue', sans-serif;
     }
 
-    /* 4. File uploader — dark card matching the new sidebar, rose action button */
+    /* 4. File uploader — white card, rose dashed border and action button */
     [data-testid="stFileUploadDropzone"] {
-        background-color: #1E3349 !important;
-        border: 1.5px dashed #3A5068 !important;
+        background-color: #FFFFFF !important;
+        border: 1.5px dashed #C43670 !important;
         border-radius: 8px !important;
     }
     [data-testid="stFileUploadDropzone"] button {
@@ -53,8 +55,8 @@ st.markdown("""
 
     /* 5. Multiselect dropdowns */
     .stMultiSelect div[data-baseweb="select"] > div {
-        background-color: #1E3349 !important;
-        border: 1px solid #3A5068 !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #C43670 !important;
     }
     span[data-baseweb="tag"] {
         background-color: #C43670 !important;
@@ -95,15 +97,15 @@ st.markdown("""
         color: white !important;
     }
 
-    /* 9. About/contact card — sits inside the sidebar, styled to match it */
+    /* 9. About/contact card — white card against the pink sidebar */
     .connect-card {
-        background-color: #1E3349 !important;
+        background-color: #FFFFFF !important;
         border-radius: 10px !important;
         padding: 16px !important;
-        border: 1px solid #3A5068 !important;
+        border: 1px solid #C43670 !important;
     }
-    .connect-card h4, .connect-card p { color: #EDEFF2 !important; }
-    .connect-card a p { color: #F09CB4 !important; }
+    .connect-card h4, .connect-card p { color: #1A2E44 !important; }
+    .connect-card a p { color: #C43670 !important; }
     </style>
 """, unsafe_allow_html=True)
 

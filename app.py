@@ -330,7 +330,7 @@ with st.sidebar:
         </div>
     """, unsafe_allow_html=True)
 
-iif uploaded_file is None:
+if uploaded_file is None:
     st.markdown(render_flow_diagram(h1_selected, h2_selected), unsafe_allow_html=True)
 else:
     with st.spinner('Calculating thermodynamic decay arrays...'):

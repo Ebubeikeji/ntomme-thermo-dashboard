@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ import io
 # ==============================================================================
 st.set_page_config(
     page_title="Ntomme Subsea Calculator",
-    page_icon="🌸",
+    page_icon="🌊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -94,7 +95,7 @@ st.markdown("""
         color: white !important;
     }
 
-    /* 9. About/contact card — sits inside the sidebar now, styled to match it */
+    /* 9. About/contact card — sits inside the sidebar, styled to match it */
     .connect-card {
         background-color: #1E3349 !important;
         border-radius: 10px !important;
@@ -110,15 +111,15 @@ st.markdown("""
 # ==============================================================================
 # 1. CONSTANTS, WELL METADATA & PI TAG MAPPING
 # ==============================================================================
-T_AMBIENT = 4.0      
-RHO_OIL = 850.0      
-RHO_WATER = 1030.0   
-RHO_GAS = 0.8        
-C_WATER = 4200.0     
-C_OIL = 2000.0       
-C_GAS = 2200.0       
-K_JUMPER = 89.40    
-K_FLOWLINE = 1.2865  
+T_AMBIENT = 4.0
+RHO_OIL = 850.0
+RHO_WATER = 1030.0
+RHO_GAS = 0.8
+C_WATER = 4200.0
+C_OIL = 2000.0
+C_GAS = 2200.0
+K_JUMPER = 89.40
+K_FLOWLINE = 1.2865
 
 NTOMME_FLOWPATHS = {'man_to_plet1': 152.108, 'plet1_to_plet2': 7217.0, 'plet2_to_rb': 150.471}
 PLET_PENALTY_LENGTH = 75.0
@@ -167,21 +168,21 @@ def process_pi_data(uploaded_file):
         if any(isinstance(val, str) and '.PV' in val for val in row.values):
             header_idx = idx
             break
-            
+
     df = pd.read_excel(uploaded_file, skiprows=header_idx)
     time_col = [col for col in df.columns if 'unnamed' in str(col).lower() or 'time' in str(col).lower()][0]
     df.rename(columns={time_col: 'Timestamp'}, inplace=True)
     df['Timestamp'] = pd.to_datetime(df['Timestamp'])
     df.set_index('Timestamp', inplace=True)
-    
+
     df.rename(columns=PI_TAG_MAPPING, inplace=True)
-    
+
     for col in df.columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
         if 'GasFlow' in col:
-            df[col] = df[col] * 0.000848  
+            df[col] = df[col] * 0.000848
         elif 'OilFlow' in col or 'WaterFlow' in col:
-            df[col] = df[col] * 150.96    
+            df[col] = df[col] * 150.96
     return df.ffill().fillna(0.0)
 
 def run_predictions(df, header_name, wells_config):
@@ -200,14 +201,14 @@ def run_predictions(df, header_name, wells_config):
         cp = calculate_mixture_cp(m_water, m_oil, m_gas)
 
         t_arrival = calculate_thermal_decay(t_xt, m_total, cp, well['l_jumper'], K_JUMPER)
-        
+
         manifold_numerator += (m_total * cp) * t_arrival
         manifold_denominator += (m_total * cp)
         total_header_flow += m_total
 
     safe_denom = np.where(manifold_denominator <= 0.01, 1.0, manifold_denominator)
     t_header_mixed = np.where(manifold_denominator > 0.01, manifold_numerator / safe_denom, T_AMBIENT)
-    mixed_cp = np.where(total_header_flow > 0.01, manifold_denominator / np.where(total_header_flow <= 0.01, 1.0, total_header_flow), (C_WATER + C_OIL + C_GAS)/3.0)
+    mixed_cp = np.where(total_header_flow > 0.01, manifold_denominator / np.where(total_header_flow <= 0.01, 1.0, total_header_flow), (C_WATER + C_OIL + C_GAS) / 3.0)
 
     results_df[f'{header_name}_Temp'] = t_header_mixed
     t_plet1 = calculate_thermal_decay(t_header_mixed, total_header_flow, mixed_cp, NTOMME_FLOWPATHS['man_to_plet1'] + PLET_PENALTY_LENGTH, K_FLOWLINE)
@@ -223,74 +224,75 @@ def run_predictions(df, header_name, wells_config):
 def create_styled_plot(df, temp_col, riser_col, title, line1_color, line2_color, y_max):
     fig, ax = plt.subplots(figsize=(12, 5), dpi=150)
     plt.style.use('seaborn-v0_8-whitegrid')
-    
+
     ax.plot(df.index, df[temp_col], label='Manifold Temp', color=line1_color, linewidth=2.2)
     ax.plot(df.index, df[riser_col], label='Riser Base Temp', color=line2_color, linewidth=2.5, linestyle=':')
-    
+
     ax.set_ylim(0, y_max)
     ax.set_title(title, fontsize=13, fontweight='bold', color='#1A2E44', pad=15)
     ax.set_xlabel("DATE", fontsize=9, fontweight='bold', color='#4A5568')
     ax.set_ylabel("TEMPERATURE (°C)", fontsize=9, fontweight='bold', color='#4A5568')
-    
+
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b'))
     ax.tick_params(axis='x', rotation=0)
     ax.grid(True, which='major', axis='both', color='#EDF2F7')
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2, frameon=False)
-    
+
     fig.subplots_adjust(bottom=0.2)
     return fig
 
-#=======================
-# Flow path diagram
-#========================
+# ==============================================================================
+# 5. FLOW PATH DIAGRAM (empty-state hero)
+# ==============================================================================
 def render_flow_diagram(h1_wells, h2_wells):
     h1_label = ", ".join(h1_wells) if h1_wells else "—"
     h2_label = ", ".join(h2_wells) if h2_wells else "—"
+    # NOTE: rendered via components.html (not st.markdown) — Markdown treats
+    # 4+ space indented lines as a code block, which was printing this as
+    # literal text instead of parsing it as HTML/SVG.
     svg = f"""
-    <div style="background-color:#FFFFFF; border:1px solid #EBD8DC; border-radius:10px; padding:16px 20px;">
-      <svg width="100%" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="#8A97A6" stroke-width="1.5"/>
-          </marker>
-        </defs>
-        <rect x="30" y="20" width="120" height="44" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
-        <text x="90" y="42" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 1</text>
-        <text x="90" y="58" text-anchor="middle" font-size="11" fill="#0F5A4A">{h1_label}</text>
+<div style="background-color:#FFFFFF; border:1px solid #EBD8DC; border-radius:10px; padding:16px 20px; font-family: 'Helvetica Neue', sans-serif;">
+<svg width="100%" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="#8A97A6" stroke-width="1.5"/>
+</marker>
+</defs>
+<rect x="30" y="20" width="120" height="44" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
+<text x="90" y="42" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 1</text>
+<text x="90" y="58" text-anchor="middle" font-size="11" fill="#0F5A4A">{h1_label}</text>
 
-        <rect x="30" y="140" width="120" height="44" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
-        <text x="90" y="162" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 2</text>
-        <text x="90" y="178" text-anchor="middle" font-size="11" fill="#0F5A4A">{h2_label}</text>
+<rect x="30" y="140" width="120" height="44" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
+<text x="90" y="162" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 2</text>
+<text x="90" y="178" text-anchor="middle" font-size="11" fill="#0F5A4A">{h2_label}</text>
 
-        <line x1="150" y1="42" x2="200" y2="90" stroke="#8A97A6" marker-end="url(#arr)"/>
-        <line x1="150" y1="162" x2="200" y2="112" stroke="#8A97A6" marker-end="url(#arr)"/>
+<line x1="150" y1="42" x2="200" y2="90" stroke="#8A97A6" marker-end="url(#arr)"/>
+<line x1="150" y1="162" x2="200" y2="112" stroke="#8A97A6" marker-end="url(#arr)"/>
 
-        <rect x="202" y="80" width="120" height="44" rx="8" fill="#1A2E44"/>
-        <text x="262" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Manifold</text>
-        <text x="262" y="118" text-anchor="middle" font-size="11" fill="#C7D1DC">mixed temp</text>
+<rect x="202" y="80" width="120" height="44" rx="8" fill="#1A2E44"/>
+<text x="262" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Manifold</text>
+<text x="262" y="118" text-anchor="middle" font-size="11" fill="#C7D1DC">mixed temp</text>
 
-        <line x1="322" y1="102" x2="362" y2="102" stroke="#8A97A6" marker-end="url(#arr)"/>
-        <rect x="364" y="80" width="90" height="44" rx="8" fill="#1A2E44"/>
-        <text x="409" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 1</text>
+<line x1="322" y1="102" x2="362" y2="102" stroke="#8A97A6" marker-end="url(#arr)"/>
+<rect x="364" y="80" width="90" height="44" rx="8" fill="#1A2E44"/>
+<text x="409" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 1</text>
 
-        <line x1="454" y1="102" x2="494" y2="102" stroke="#8A97A6" marker-end="url(#arr)"/>
-        <rect x="496" y="80" width="90" height="44" rx="8" fill="#1A2E44"/>
-        <text x="541" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 2</text>
+<line x1="454" y1="102" x2="494" y2="102" stroke="#8A97A6" marker-end="url(#arr)"/>
+<rect x="496" y="80" width="90" height="44" rx="8" fill="#1A2E44"/>
+<text x="541" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 2</text>
 
-        <line x1="541" y1="124" x2="541" y2="154" stroke="#8A97A6" marker-end="url(#arr)"/>
-        <rect x="481" y="156" width="120" height="44" rx="8" fill="#C43670"/>
-        <text x="541" y="178" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Riser base</text>
+<line x1="541" y1="124" x2="541" y2="154" stroke="#8A97A6" marker-end="url(#arr)"/>
+<rect x="481" y="156" width="120" height="44" rx="8" fill="#C43670"/>
+<text x="541" y="178" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Riser base</text>
 
-        <text x="340" y="212" text-anchor="middle" font-size="11" fill="#7A8794">
-          Temperatures populate at each stage once a PI export is uploaded
-        </text>
-      </svg>
-    </div>
-    """
+<text x="340" y="212" text-anchor="middle" font-size="11" fill="#7A8794">Temperatures populate at each stage once a PI export is uploaded</text>
+</svg>
+</div>
+"""
     return svg
 
 # ==============================================================================
-# 5. FRONTEND UI LAYOUT
+# 6. FRONTEND UI LAYOUT
 # ==============================================================================
 st.title("Ntomme Virtual Sensor Controller")
 st.markdown("Subsea Thermodynamic Decay Predictor")
@@ -299,31 +301,31 @@ st.divider()
 with st.sidebar:
     st.header("Data Ingestion")
     uploaded_file = st.file_uploader("Upload Weekly PI Vision Excel File", type=['xlsx'])
-    
+
     st.divider()
     st.header("Manifold Routing")
     st.caption("Reconfigure active wells per header whenever subsea alignments change.")
-    
+
     h1_selected = st.multiselect("Header 1 Active Wells", options=list(WELL_SPECS.keys()), default=['W3', 'W5'])
     h2_selected = st.multiselect("Header 2 Active Wells", options=list(WELL_SPECS.keys()), default=['W1', 'W9'])
 
     # -- CREATOR & CONTACT CARD --
     st.markdown("""
         <div class="connect-card">
-            <h4 style="margin-top:0; color:#1A2E44;">👋 Built by Ebube</h4>
-            <p style="font-size: 0.88rem; line-height: 1.4; color: #4A5568;">
+            <h4 style="margin-top:0;">👋 Built by Ebube</h4>
+            <p style="font-size: 0.88rem; line-height: 1.4;">
                 I built this controller to serve as another data set just like we have the APD readings, we can compare both to ensure we have accurate readings!
             </p>
-            <p style="font-size: 0.88rem; font-weight: 500; color: #1A2E44; margin-bottom: 8px;">
+            <p style="font-size: 0.88rem; font-weight: 500; margin-bottom: 8px;">
                 Have any feedback or want to connect? Send me an email! I'd love to hear from you:
             </p>
             <a href="mailto:ebubeikeji7@gmail.com" style="text-decoration:none;">
-                <p style="font-size: 0.85rem; font-weight: bold; color: #C87A8F; margin-bottom: 12px;">
+                <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">
                     ✉️ ebubeikeji7@gmail.com
                 </p>
             </a>
             <a href="https://www.linkedin.com/in/ebube-ikeji/" target="_blank" style="text-decoration:none;">
-                <p style="font-size: 0.85rem; font-weight: bold; color: #1A2E44; margin:0;">
+                <p style="font-size: 0.85rem; font-weight: bold; margin:0;">
                     🔗 Connect on LinkedIn
                 </p>
             </a>
@@ -331,18 +333,18 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 if uploaded_file is None:
-    st.markdown(render_flow_diagram(h1_selected, h2_selected), unsafe_allow_html=True)
+    components.html(render_flow_diagram(h1_selected, h2_selected), height=260)
 else:
     with st.spinner('Calculating thermodynamic decay arrays...'):
         try:
             df = process_pi_data(uploaded_file)
-            
+
             h1_config = [WELL_SPECS[w] for w in h1_selected]
             h2_config = [WELL_SPECS[w] for w in h2_selected]
-            
+
             h1_preds = run_predictions(df, "Header1", h1_config)
             h2_preds = run_predictions(df, "Header2", h2_config)
-            
+
             # -- DISPLAY METRIC CARDS --
             st.subheader("Latest System Status")
             col1, col2, col3, col4 = st.columns(4)
@@ -350,26 +352,26 @@ else:
             col2.metric("Riser 21 Base", f"{h1_preds['Header1_Riser_Base_Temp'].iloc[-1]:.1f} °C")
             col3.metric(f"Header 2 ({', '.join(h2_selected)})", f"{h2_preds['Header2_Temp'].iloc[-1]:.1f} °C")
             col4.metric("Riser 20 Base", f"{h2_preds['Header2_Riser_Base_Temp'].iloc[-1]:.1f} °C")
-            
+
             st.divider()
-            
+
             # -- DISPLAY GRAPHS --
             st.subheader("Thermal Trend Analysis")
             # Dusty Rose for Manifold, Subsea Navy for Riser Base
             fig1 = create_styled_plot(h1_preds, 'Header1_Temp', 'Header1_Riser_Base_Temp', f"Header 1 ({', '.join(h1_selected)}) to Riser 21 Flowline", '#C87A8F', '#1A2E44', 100)
             st.pyplot(fig1)
-            
+
             fig2 = create_styled_plot(h2_preds, 'Header2_Temp', 'Header2_Riser_Base_Temp', f"Header 2 ({', '.join(h2_selected)}) to Riser 20 Flowline", '#D87093', '#1A2E44', 80)
             st.pyplot(fig2)
-            
+
             # -- DOWNLOAD BUTTONS --
             st.markdown("### Export Presentation-Ready Graphs")
             col_a, col_b = st.columns(2)
-            
+
             buf1 = io.BytesIO()
             fig1.savefig(buf1, format="png", dpi=300, bbox_inches="tight")
             col_a.download_button(label="Download Riser 21 Graph (PNG)", data=buf1.getvalue(), file_name="riser21_predictions.png", mime="image/png")
-            
+
             buf2 = io.BytesIO()
             fig2.savefig(buf2, format="png", dpi=300, bbox_inches="tight")
             col_b.download_button(label="Download Riser 20 Graph (PNG)", data=buf2.getvalue(), file_name="riser20_predictions.png", mime="image/png")

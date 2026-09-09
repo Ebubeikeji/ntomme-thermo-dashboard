@@ -22,13 +22,21 @@ st.markdown("""
     /* 1. Main Canvas */
     [data-testid="stAppViewContainer"] { background-color: #F5F0ED !important; }
 
+    /* 1b. Streamlit renders icons (upload icon, sidebar collapse arrow) as text
+       spans that rely on the Material Symbols font to turn e.g. "upload" into
+       a glyph. Our font-family overrides below were breaking that font,
+       which is why the raw icon names were showing up as literal text. */
+    [data-testid="stIconMaterial"] {
+        font-family: 'Material Symbols Rounded' !important;
+    }
+
     /* 2. Sidebar — pink, as requested. Darkened slightly from the original
        flat #F9D0D6 to #F7C2CE so navy text and the rose accent both read
        cleanly against it (the original was a touch too light for contrast). */
     [data-testid="stSidebar"] { background-color: #F7C2CE !important; }
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4,
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span:not([data-testid="stIconMaterial"]),
     [data-testid="stSidebar"] label { color: #1A2E44 !important; }
     [data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] small {
         color: #6A4A54 !important;
@@ -37,7 +45,8 @@ st.markdown("""
     /* 3. Main canvas typography stays navy-on-cream */
     [data-testid="stAppViewContainer"] h1, [data-testid="stAppViewContainer"] h2,
     [data-testid="stAppViewContainer"] h3, [data-testid="stAppViewContainer"] p,
-    [data-testid="stAppViewContainer"] span, [data-testid="stAppViewContainer"] label {
+    [data-testid="stAppViewContainer"] span:not([data-testid="stIconMaterial"]),
+    [data-testid="stAppViewContainer"] label {
         color: #1A2E44 !important;
         font-family: 'Helvetica Neue', sans-serif;
     }
@@ -97,15 +106,13 @@ st.markdown("""
         color: white !important;
     }
 
-    /* 9. About/contact card — white card against the pink sidebar */
-    .connect-card {
+    /* 9. About/contact — a collapsible expander instead of an always-open
+       card, so it doesn't compete visually with the routing controls above it */
+    [data-testid="stSidebar"] [data-testid="stExpander"] {
         background-color: #FFFFFF !important;
-        border-radius: 10px !important;
-        padding: 16px !important;
         border: 1px solid #C43670 !important;
+        border-radius: 10px !important;
     }
-    .connect-card h4, .connect-card p { color: #1A2E44 !important; }
-    .connect-card a p { color: #C43670 !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -253,41 +260,43 @@ def render_flow_diagram(h1_wells, h2_wells):
     # 4+ space indented lines as a code block, which was printing this as
     # literal text instead of parsing it as HTML/SVG.
     svg = f"""
-<div style="background-color:#FFFFFF; border:1px solid #EBD8DC; border-radius:10px; padding:16px 20px; font-family: 'Helvetica Neue', sans-serif;">
-<svg width="100%" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg">
+<div style="background-color:#FFFFFF; border:1px solid #EBD8DC; border-radius:12px; padding:22px 28px 18px; font-family: 'Helvetica Neue', sans-serif;">
+<svg width="100%" viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg">
 <defs>
 <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
 <path d="M2 1L8 5L2 9" fill="none" stroke="#8A97A6" stroke-width="1.5"/>
 </marker>
 </defs>
-<rect x="30" y="20" width="120" height="44" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
-<text x="90" y="42" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 1</text>
-<text x="90" y="58" text-anchor="middle" font-size="11" fill="#0F5A4A">{h1_label}</text>
+<text x="0" y="20" font-size="13" font-weight="600" fill="#4A5568">Flow path</text>
 
-<rect x="30" y="140" width="120" height="44" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
-<text x="90" y="162" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 2</text>
-<text x="90" y="178" text-anchor="middle" font-size="11" fill="#0F5A4A">{h2_label}</text>
+<rect x="40" y="50" width="140" height="48" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
+<text x="110" y="70" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 1</text>
+<text x="110" y="88" text-anchor="middle" font-size="11" fill="#0F5A4A">{h1_label}</text>
 
-<line x1="150" y1="42" x2="200" y2="90" stroke="#8A97A6" marker-end="url(#arr)"/>
-<line x1="150" y1="162" x2="200" y2="112" stroke="#8A97A6" marker-end="url(#arr)"/>
+<rect x="40" y="150" width="140" height="48" rx="8" fill="#E1F0EC" stroke="#2F8F7C"/>
+<text x="110" y="170" text-anchor="middle" font-size="13" fill="#0F5A4A" font-weight="600">Header 2</text>
+<text x="110" y="188" text-anchor="middle" font-size="11" fill="#0F5A4A">{h2_label}</text>
 
-<rect x="202" y="80" width="120" height="44" rx="8" fill="#1A2E44"/>
-<text x="262" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Manifold</text>
-<text x="262" y="118" text-anchor="middle" font-size="11" fill="#C7D1DC">mixed temp</text>
+<line x1="180" y1="74" x2="220" y2="108" stroke="#8A97A6" marker-end="url(#arr)"/>
+<line x1="180" y1="174" x2="220" y2="136" stroke="#8A97A6" marker-end="url(#arr)"/>
 
-<line x1="322" y1="102" x2="362" y2="102" stroke="#8A97A6" marker-end="url(#arr)"/>
-<rect x="364" y="80" width="90" height="44" rx="8" fill="#1A2E44"/>
-<text x="409" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 1</text>
+<rect x="220" y="96" width="140" height="52" rx="8" fill="#1A2E44"/>
+<text x="290" y="118" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Manifold</text>
+<text x="290" y="136" text-anchor="middle" font-size="11" fill="#C7D1DC">mixed temp</text>
 
-<line x1="454" y1="102" x2="494" y2="102" stroke="#8A97A6" marker-end="url(#arr)"/>
-<rect x="496" y="80" width="90" height="44" rx="8" fill="#1A2E44"/>
-<text x="541" y="102" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 2</text>
+<line x1="360" y1="122" x2="400" y2="122" stroke="#8A97A6" marker-end="url(#arr)"/>
+<rect x="400" y="96" width="90" height="52" rx="8" fill="#1A2E44"/>
+<text x="445" y="122" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 1</text>
 
-<line x1="541" y1="124" x2="541" y2="154" stroke="#8A97A6" marker-end="url(#arr)"/>
-<rect x="481" y="156" width="120" height="44" rx="8" fill="#C43670"/>
-<text x="541" y="178" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Riser base</text>
+<line x1="490" y1="122" x2="530" y2="122" stroke="#8A97A6" marker-end="url(#arr)"/>
+<rect x="530" y="96" width="90" height="52" rx="8" fill="#1A2E44"/>
+<text x="575" y="122" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">PLET 2</text>
 
-<text x="340" y="212" text-anchor="middle" font-size="11" fill="#7A8794">Temperatures populate at each stage once a PI export is uploaded</text>
+<line x1="575" y1="148" x2="575" y2="180" stroke="#8A97A6" marker-end="url(#arr)"/>
+<rect x="505" y="180" width="140" height="48" rx="8" fill="#C43670"/>
+<text x="575" y="204" text-anchor="middle" font-size="13" fill="#FFFFFF" font-weight="600">Riser base</text>
+
+<text x="340" y="248" text-anchor="middle" font-size="11" fill="#7A8794">Temperatures populate at each stage once a PI export is uploaded</text>
 </svg>
 </div>
 """
@@ -311,31 +320,20 @@ with st.sidebar:
     h1_selected = st.multiselect("Header 1 Active Wells", options=list(WELL_SPECS.keys()), default=['W3', 'W5'])
     h2_selected = st.multiselect("Header 2 Active Wells", options=list(WELL_SPECS.keys()), default=['W1', 'W9'])
 
-    # -- CREATOR & CONTACT CARD --
-    st.markdown("""
-        <div class="connect-card">
-            <h4 style="margin-top:0;">👋 Built by Ebube</h4>
-            <p style="font-size: 0.88rem; line-height: 1.4;">
-                I built this controller to serve as another data set just like we have the APD readings, we can compare both to ensure we have accurate readings!
+    # -- ABOUT / CONTACT (collapsed by default) --
+    with st.expander("👋 Built by Ebube"):
+        st.markdown("""
+            <p style="font-size:0.85rem; line-height:1.5; margin:0 0 10px;">
+                Built to cross-check against APD readings so we can confirm accurate values.
             </p>
-            <p style="font-size: 0.88rem; font-weight: 500; margin-bottom: 8px;">
-                Have any feedback or want to connect? Send me an email! I'd love to hear from you:
-            </p>
-            <a href="mailto:ebubeikeji7@gmail.com" style="text-decoration:none;">
-                <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 12px;">
-                    ✉️ ebubeikeji7@gmail.com
-                </p>
-            </a>
-            <a href="https://www.linkedin.com/in/ebube-ikeji/" target="_blank" style="text-decoration:none;">
-                <p style="font-size: 0.85rem; font-weight: bold; margin:0;">
-                    🔗 Connect on LinkedIn
-                </p>
-            </a>
-        </div>
-    """, unsafe_allow_html=True)
+            <div style="display:flex; gap:16px;">
+                <a href="mailto:ebubeikeji7@gmail.com" style="text-decoration:none; font-size:0.82rem; font-weight:600; color:#C43670;">✉️ Email</a>
+                <a href="https://www.linkedin.com/in/ebube-ikeji/" target="_blank" style="text-decoration:none; font-size:0.82rem; font-weight:600; color:#1A2E44;">🔗 LinkedIn</a>
+            </div>
+        """, unsafe_allow_html=True)
 
 if uploaded_file is None:
-    components.html(render_flow_diagram(h1_selected, h2_selected), height=260)
+    components.html(render_flow_diagram(h1_selected, h2_selected), height=300)
 else:
     with st.spinner('Calculating thermodynamic decay arrays...'):
         try:
